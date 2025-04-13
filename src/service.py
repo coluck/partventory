@@ -37,3 +37,13 @@ async def create_part(part: PartCreate, session: AsyncSession) -> Part:
     logger.info("Part created successfully: id=%s part_number=%s",
                 new_part.id, new_part.part_number)
     return new_part
+
+
+async def get_part(part_id: int, session: AsyncSession) -> Part:
+    logger.info("Fetching part with id: %s", part_id)
+    part = await session.get(Part, part_id)
+    if not part:
+        logger.warning("Part with id '%s' not found", part_id)
+        raise PartNotFound(f"Part with id '{part_id}' not found")
+    
+    return part
