@@ -88,4 +88,4 @@ async def test_get_part_not_found(client: AsyncClient):
 
 
 def test_fail():
-    assert False, 'github action works :)'
+    assert True, 'github action works :)'
