@@ -11,6 +11,7 @@ class Part(Base):
     description = Column(Text, nullable=True)
     price = Column(Numeric(10, 2), nullable=False)
     quantity = Column(Integer, nullable=False)
+    internal_note = Column(Text, nullable=True) # Added afterwards to test alembic
 
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now(), nullable=True)
