@@ -85,3 +85,7 @@ async def test_get_part_not_found(client: AsyncClient):
     response = await client.get(f"/parts/{invalid_part_id}")
     assert response.status_code == 404
     assert response.json()["detail"] == f"Part with id '{invalid_part_id}' not found"
+
+
+def test_fail():
+    assert True, 'github action works :)'
