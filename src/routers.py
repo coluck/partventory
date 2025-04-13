@@ -1,18 +1,10 @@
-import logging
-from typing import Annotated
+from fastapi import APIRouter, HTTPException, status
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from .database import get_session
+from .dependencies import SessionDep
 from .schemas import PartCreate, PartResponse
 from .service import create_part, get_part
 from .exceptions import PartAlreadyExists, PartCreationError, PartNotFound
 
-logger = logging.getLogger(__name__)
-
-
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 router = APIRouter(prefix="/parts", tags=["parts"])
 
