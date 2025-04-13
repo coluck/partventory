@@ -9,12 +9,7 @@ from .schemas import PartCreate
 from .exceptions import PartAlreadyExists, PartCreationError, PartNotFound
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="[%(levelname)s] %(asctime)s - %(message)s"
-)
 logger = logging.getLogger(__name__)
-
 
 
 async def create_part(part: PartCreate, session: AsyncSession) -> Part:

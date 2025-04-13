@@ -7,12 +7,15 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
 
+connect_args = {
+    "check_same_thread": False
+} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {}
 
 engine = create_async_engine(
     SQLALCHEMY_DATABASE_URL,
-    echo=True,
+    echo=False,
     future=True,
-    connect_args={"check_same_thread": False},
+    connect_args=connect_args,
 )
 
 AsyncSessionLocal = sessionmaker(

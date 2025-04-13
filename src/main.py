@@ -1,13 +1,28 @@
-from fastapi import FastAPI
+import logging
+import sys
 
-from .database import engine, Base
+from fastapi import FastAPI, Request
+
 from .routers import router
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+    ],
+)
 
 app = FastAPI()
 app.include_router(router)
 
 
 @app.get("/")
-def index():
-    return {"message": "Hello World"}
+async def index(request: Request):
+    base_url = str(request.base_url).rstrip("/")
+    return {
+        "message": "Welcome to the Partventory",
+        "docs": f"{base_url}/docs",
+        "redoc": f"{base_url}/redoc",
+    }
