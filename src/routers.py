@@ -1,0 +1,36 @@
+import logging
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
+
+from .database import get_session
+from .models import Part
+from .schemas import PartCreate, PartResponse
+from .service import create_part
+from .exceptions import PartAlreadyExists, PartCreationError
+
+logger = logging.getLogger(__name__)
+
+
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+
+router = APIRouter(prefix="/parts", tags=["parts"])
+
+
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=PartResponse)
+async def create_part_handler(part: PartCreate, session: SessionDep):
+    """ Creates a new part in the database. """
+    try:
+        return await create_part(part, session)
+    except PartAlreadyExists as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except PartCreationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
