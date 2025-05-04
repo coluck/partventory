@@ -1,12 +1,23 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
+from fastapi import APIRouter, HTTPException, Query, status
 
 from .dependencies import SessionDep
-from .schemas import PartCreate, PartResponse
-from .service import create_part, get_part
+from .schemas import PartCreate, PartResponse, PartFilters
+from .service import create_part, get_part, list_parts
 from .exceptions import PartAlreadyExists, PartCreationError, PartNotFound
 
 
 router = APIRouter(prefix="/parts", tags=["parts"])
+
+
+@router.get("", response_model=list[PartResponse])
+async def list_parts_handler(
+    session: SessionDep,
+    filters: Annotated[PartFilters, Query()]
+):
+    """ List parts. """
+    parts = await list_parts(session=session, filters=filters)
+    return parts
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=PartResponse)

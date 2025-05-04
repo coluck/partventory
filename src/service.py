@@ -2,14 +2,42 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import asc, desc, select
 
 
 from .models import Part
-from .schemas import PartCreate
+from .schemas import PartCreate, PartFilters
 from .exceptions import PartAlreadyExists, PartCreationError, PartNotFound
 
 
 logger = logging.getLogger(__name__)
+
+
+async def list_parts(session: AsyncSession, filters: PartFilters) -> list[Part]:
+    logger.info("Fetching all parts with filters: %s", filters)
+    stmt = select(Part)
+
+    # Filtering
+    if filters.part_number:
+        stmt = stmt.where(Part.part_number.ilike(f"%{filters.part_number}%"))
+    if filters.description:
+        stmt = stmt.where(Part.description.ilike(f"%{filters.description}%"))
+    if filters.quantity is not None:
+        stmt = stmt.where(Part.quantity == filters.quantity)
+
+    # Ordering
+    order_by = getattr(Part, filters.order_by)
+    sort = asc if filters.sort == "asc" else desc
+    stmt = stmt.order_by(sort(order_by))
+    
+    # Pagination
+    stmt = stmt.limit(filters.limit).offset(filters.offset)
+    
+    # Execution
+    result = await session.execute(stmt)
+    parts = result.scalars().all()
+    logger.info("Fetched %d parts", len(parts))
+    return parts
 
 
 async def create_part(part: PartCreate, session: AsyncSession) -> Part:
