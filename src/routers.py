@@ -2,9 +2,9 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, status
 
 from .dependencies import SessionDep
-from .schemas import PartCreate, PartResponse, PartFilters
-from .service import create_part, get_part, list_parts
-from .exceptions import PartAlreadyExists, PartCreationError, PartNotFound
+from .schemas import PartCreate, PartPartialUpdate, PartResponse, PartFilters, PartUpdate
+from .service import create_part, get_part, list_parts, update_part
+from .exceptions import PartAlreadyExists, PartCreationError, PartNotFound, PartUpdateError
 
 
 router = APIRouter(prefix="/parts", tags=["parts"])
@@ -47,3 +47,38 @@ async def get_part_handler(part_id: int, session: SessionDep):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
+    
+async def try_update_part(
+        part_id: int,
+        part: PartUpdate | PartPartialUpdate,
+        session: SessionDep,
+        partial: bool
+    ):
+    try:
+        return await update_part(part_id, part, session, partial)
+    except PartNotFound as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except PartAlreadyExists as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except PartUpdateError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
+@router.put("/{part_id}", response_model=PartResponse)
+async def put_part_handler(part_id: int, part: PartUpdate, session: SessionDep):
+    return try_update_part(part_id, part, session, partial=False)
+
+
+@router.patch("/{part_id}", response_model=PartResponse)
+async def patch_part_handler(part_id: int, part: PartPartialUpdate, session: SessionDep):
+    return try_update_part(part_id, part, session, partial=True)
+    

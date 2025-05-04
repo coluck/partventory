@@ -1,6 +1,6 @@
 
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -29,6 +29,16 @@ class PartBase(BaseModel):
 
 class PartCreate(PartBase):
     pass
+
+
+class PartUpdate(PartCreate):
+    pass
+
+class PartPartialUpdate(BaseModel):
+    part_number: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = Field(None, ge=0)
+    quantity: Optional[int] = Field(None, ge=0)
 
 
 class PartResponse(PartBase):

@@ -29,7 +29,7 @@ async def list_parts(session: AsyncSession, filters: PartFilters) -> list[Part]:
     order_by = getattr(Part, filters.order_by)
     sort = asc if filters.sort == "asc" else desc
     stmt = stmt.order_by(sort(order_by))
-    
+
     # Pagination
     stmt = stmt.limit(filters.limit).offset(filters.offset)
     
@@ -70,3 +70,28 @@ async def get_part(part_id: int, session: AsyncSession) -> Part:
         raise PartNotFound(f"Part with id '{part_id}' not found")
     
     return part
+
+
+async def update_part(part_id: int, part: PartCreate, session: AsyncSession, partial=False) -> Part:
+    logger.info("Updating part with id: %s", part_id)
+    existing_part = await get_part(part_id, session)
+    
+    for key, value in part.model_dump(exclude_unset=partial).items():
+        setattr(existing_part, key, value)
+
+    try:
+        await session.commit()
+        await session.refresh(existing_part)
+    except IntegrityError as e:
+        await session.rollback()
+        logger.warning("Integrity error while updating part '%s': %s", part.part_number, str(e))
+        raise PartAlreadyExists(f"Part with part_number '{part.part_number}' already exists")
+    except Exception as e:
+        await session.rollback()
+        logger.exception("Unexpected error while updating part '%s': %s", part.part_number, str(e))
+        raise PartCreationError("An unexpected error occurred while updating the part")
+    
+    logger.info("Part updated successfully: id=%s part_number=%s",
+                existing_part.id, existing_part.part_number)
+    return existing_part
+

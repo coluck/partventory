@@ -3,6 +3,10 @@ class PartCreationError(Exception):
     """Generic error for part creation failures."""
 
 
+class PartUpdateError(Exception):
+    """Generic error for part creation failures."""
+
+
 class PartAlreadyExists(Exception):
     """Raised when trying to create a part that already exists."""
 
