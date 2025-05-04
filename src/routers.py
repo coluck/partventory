@@ -75,12 +75,12 @@ async def try_update_part(
 
 @router.put("/{part_id}", response_model=PartResponse)
 async def put_part_handler(part_id: int, part: PartUpdate, session: SessionDep):
-    return try_update_part(part_id, part, session, partial=False)
+    return await try_update_part(part_id, part, session, partial=False)
 
 
 @router.patch("/{part_id}", response_model=PartResponse)
 async def patch_part_handler(part_id: int, part: PartPartialUpdate, session: SessionDep):
-    return try_update_part(part_id, part, session, partial=True)
+    return await try_update_part(part_id, part, session, partial=True)
     
 
 @router.delete("/{part_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -154,6 +154,71 @@ async def test_list_parts_order_by(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_update_part_success(client: AsyncClient):
+    response = await client.post("/parts", json=valid_part_payload)
+    assert response.status_code == 201
+
+    part_id = response.json()["id"]
+    update_payload = {
+        "part_number": "UPDATED-PART-001",
+        "description": "Updated part",
+        "price": 150.0,
+        "quantity": 20
+    }
+    response = await client.put(f"/parts/{part_id}", json=update_payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    for key in update_payload:
+        assert update_payload[key] == data[key]
+    
+@pytest.mark.asyncio
+async def test_update_part_not_found(client: AsyncClient):
+    invalid_part_id = 999999
+    update_payload = {
+        "part_number": "UPDATED-PART-001",
+        "description": "Updated part",
+        "price": 150.0,
+        "quantity": 20
+    }
+    response = await client.put(f"/parts/{invalid_part_id}", json=update_payload)
+    assert response.status_code == 404
+    assert response.json()["detail"] == f"Part with id '{invalid_part_id}' not found"
+
+@pytest.mark.asyncio
+async def test_update_part_with_invalid_payload(client: AsyncClient):
+    response = await client.post("/parts", json=valid_part_payload)
+    assert response.status_code == 201
+
+    part_id = response.json()["id"]
+    invalid_payload = {
+        "part_number": None,
+        "description": "Updated part",
+        "price": -150.0,
+        "quantity": 20
+    }
+    response = await client.put(f"/parts/{part_id}", json=invalid_payload)
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["msg"] == "Input should be a valid string"
+
+@pytest.mark.asyncio
+async def test_partial_update_part_success(client: AsyncClient):
+    response = await client.post("/parts", json=valid_part_payload)
+    assert response.status_code == 201
+
+    part_id = response.json()["id"]
+    partial_update_payload = {
+        "description": "Part with partial update"
+    }
+    response = await client.patch(f"/parts/{part_id}", json=partial_update_payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["description"] == partial_update_payload["description"]
+
+
+
+@pytest.mark.asyncio
 async def test_delete_part_success(client: AsyncClient):
     response = await client.post("/parts", json=valid_part_payload)
     assert response.status_code == 201
