@@ -3,8 +3,8 @@ from fastapi import APIRouter, HTTPException, Query, status
 
 from .dependencies import SessionDep
 from .schemas import PartCreate, PartPartialUpdate, PartResponse, PartFilters, PartUpdate
-from .service import create_part, get_part, list_parts, update_part
-from .exceptions import PartAlreadyExists, PartCreationError, PartNotFound, PartUpdateError
+from .service import create_part, delete_part, get_part, list_parts, update_part
+from .exceptions import PartAlreadyExists, PartCreationError, PartDeletionError, PartNotFound, PartUpdateError
 
 
 router = APIRouter(prefix="/parts", tags=["parts"])
@@ -82,3 +82,19 @@ async def put_part_handler(part_id: int, part: PartUpdate, session: SessionDep):
 async def patch_part_handler(part_id: int, part: PartPartialUpdate, session: SessionDep):
     return try_update_part(part_id, part, session, partial=True)
     
+
+@router.delete("/{part_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_part_handler(part_id: int, session: SessionDep):
+    """ Deletes a part by ID. """
+    try:
+        await delete_part(part_id, session)
+    except PartNotFound as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except PartDeletionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )

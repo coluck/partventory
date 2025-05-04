@@ -152,3 +152,17 @@ async def test_list_parts_order_by(client: AsyncClient):
     for i in range(len(data) - 1):
         assert data[i]["quantity"] >= data[i + 1]["quantity"]
 
+
+@pytest.mark.asyncio
+async def test_delete_part_success(client: AsyncClient):
+    response = await client.post("/parts", json=valid_part_payload)
+    assert response.status_code == 201
+
+    part_id = response.json()["id"]
+    response = await client.delete(f"/parts/{part_id}")
+    assert response.status_code == 204
+
+    response = await client.get(f"/parts/{part_id}")
+    assert response.status_code == 404
+    assert response.json()["detail"] == f"Part with id '{part_id}' not found"
+

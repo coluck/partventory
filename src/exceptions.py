@@ -7,6 +7,9 @@ class PartUpdateError(Exception):
     """Generic error for part creation failures."""
 
 
+class PartDeletionError(Exception):
+    """Generic error for part deletion failures."""
+
 class PartAlreadyExists(Exception):
     """Raised when trying to create a part that already exists."""
 

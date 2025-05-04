@@ -7,7 +7,7 @@ from sqlalchemy import asc, desc, select
 
 from .models import Part
 from .schemas import PartCreate, PartFilters
-from .exceptions import PartAlreadyExists, PartCreationError, PartNotFound
+from .exceptions import PartAlreadyExists, PartCreationError, PartDeletionError, PartNotFound, PartUpdateError
 
 
 logger = logging.getLogger(__name__)
@@ -89,9 +89,26 @@ async def update_part(part_id: int, part: PartCreate, session: AsyncSession, par
     except Exception as e:
         await session.rollback()
         logger.exception("Unexpected error while updating part '%s': %s", part.part_number, str(e))
-        raise PartCreationError("An unexpected error occurred while updating the part")
+        raise PartUpdateError("An unexpected error occurred while updating the part")
     
     logger.info("Part updated successfully: id=%s part_number=%s",
                 existing_part.id, existing_part.part_number)
     return existing_part
+
+
+
+async def delete_part(part_id: int, session: AsyncSession) -> None:
+    logger.info("Deleting part with id: %s", part_id)
+    part = await get_part(part_id, session)
+    
+    try:
+        await session.delete(part)
+        await session.commit()
+    except Exception as e:
+        await session.rollback()
+        logger.exception("Unexpected error while deleting part '%s': %s", part.part_number, str(e))
+        raise PartDeletionError("An unexpected error occurred while deleting the part")
+    
+    logger.info("Part deleted successfully: id=%s part_number=%s",
+                part.id, part.part_number)
 
